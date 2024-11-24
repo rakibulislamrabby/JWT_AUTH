@@ -6,7 +6,7 @@ const User = require('../user/user.model')
 //Register new user
 //POST /api/users
 const registerUser = asyncHandler(async (req, res) => {
-    const { name, email, password } = req.body
+    const { name, email, password, role } = req.body
 
     if (!name || !email || !password) {
         res.status(400)
@@ -27,6 +27,7 @@ const registerUser = asyncHandler(async (req, res) => {
         name,
         email,
         password: hashedPassword,
+        role
     })
     if (user) {
         res.status(201).json({
@@ -68,7 +69,32 @@ const loginUser = asyncHandler(async (req, res) => {
 //Private
 const getMe = asyncHandler(async (req, res) => {
     res.status(200).json(req.user)
-})
+});
+
+// show all user only the admin
+const AllUser = asyncHandler(async (req, res) => {
+    console.log("ROle", req.user.role);
+    // if (req.user.role !== 'admin') {
+    //     res.status(403);
+    //     throw new Error('Access denied: Only admins can view all users');
+    // }
+    try {
+        const users = await User.find();
+        res.status(200).json(users);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+const deleteUser = async (req, res) => {
+    try {
+        const id = req.params.id;
+        const result = await User.findByIdAndDelete(id);
+        res.status(200).json({ message: "Delete user successfully", result });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+}
 
 // Generate JWT
 const generateToken = (id) => {
@@ -81,4 +107,6 @@ module.exports = {
     registerUser,
     loginUser,
     getMe,
+    AllUser,
+    deleteUser
 }
